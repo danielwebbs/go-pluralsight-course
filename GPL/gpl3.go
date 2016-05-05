@@ -1,14 +1,17 @@
 package main
-//Time stamp on vid 4:38
+
 import (
 "fmt"
-"errors"
+//"errors"
 "strings"
 )
 
 func main() {
-
   displayMenu()
+
+  var option string
+  fmt.Scanln(&option)
+  selectOption(option)
 }
 
 
@@ -16,54 +19,39 @@ func displayMenu() {
   fmt.Println("1) Generate Power Plant Report")
   fmt.Println("2) Generate Power Grid Report")
   fmt.Println("Please select an option: ")
-
-  var option string
-
-  fmt.Scanln(&option)
-
-  selectOption(option)
 }
 
 func selectOption(option string) {
-  plantCapacities, activePlants, gridLoad := getTestData()
-
+  _, gridLoad := getTestData()
   switch option {
   case "1":
-    generatePlantCapacityReport(plantCapacities...)
+    gridLoad.generatePlantReport()
   case "2":
-    generatePowerGridReport(activePlants, plantCapacities, gridLoad)
+    gridLoad.generateGridReport()
   default:
     fmt.Println("Invalid option selected")
-}
-
+ }
 }
 
 func generatePlantCapacityReport(plantCapacities ...float64) {
   for index, cap := range plantCapacities {
     fmt.Println("Plant Capacity: ", index, cap)
-
   }
 }
 
-func generatePowerGridReport(activePlants []int, plantCapacities []float64, gridLoad float64){
-  capacity := 0.
-  for _, plantId := range activePlants {
-    capacity += plantCapacities[plantId]
+func getTestData()(plants []PowerPlant, gridLoad PowerGrid){
+  plants = []PowerPlant {
+    PowerPlant{hydro, 300, active},
+    PowerPlant{wind, 30, active},
+    PowerPlant{wind, 25, inactive},
+    PowerPlant{wind, 35, active},
+    PowerPlant{solar, 45, unavailable},
+    PowerPlant{solar, 40, inactive},
   }
-  fmt.Println("Capacity: ", capacity)
-  fmt.Println("Load: ", gridLoad)
-  fmt.Println("utilization: ", gridLoad/capacity*100)
-}
 
-func getTestData()(plantCapacities []float64, activePlants []int, gridLoad float64){
+  gridLoad = PowerGrid{300, plants}
 
-      plantCapacities = []float64{30, 30, 30, 60, 60, 100}
-
-      activePlants = []int{0, 1}
-
-      gridLoad = 75.
-
-      return
+  return
 }
 
 type PlantType string
@@ -74,11 +62,11 @@ const (
   solar PlantType = "Solar"
 )
 
-type PlanStatus string
+type PlantStatus string
 
 const(
   active PlantStatus = "Active"
-  inactive PlantStatus = "Inactive"
+   inactive PlantStatus = "Inactive"
   unavailable PlantStatus = "Unavailable"
 )
 
@@ -95,9 +83,24 @@ type PowerPlant struct {
 
   func (pg * PowerGrid) generatePlantReport() {
     for index, plant := range pg.plants {
-      label := fmt.Println("Plant #", index)
-      fmt.Println(label)
+      label := fmt.Sprintf("","Plant #", index)
+      fmt.Println(plant)
       fmt.Println(strings.Repeat("-", len(label)))
       fmt.Println()
     }
+  }
+
+  func (pg * PowerGrid) generateGridReport() {
+    capacity := 0.
+    for _, plant := range pg.plants {
+      if plant.status == active{
+        capacity += plant.capacity
+      }
+    }
+    label := "Power Grid Report"
+    fmt.Println(label)
+    fmt.Println("",strings.Repeat("-", len(label)))
+    fmt.Println("Capacity", capacity)
+    fmt.Println("Load", pg.load)
+    fmt.Println("Utilization", pg.load/capacity*100)
   }
